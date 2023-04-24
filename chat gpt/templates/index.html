@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<head>
+    <!-- <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/AddAccident.css') }}"> -->
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+
+
+</head>
+
+<style>
+    #div_book_title,
+    #div_chapters_titles_container,
+    #div_instructions {
+        border: 1px solid black;
+        border-radius: 5px;
+        padding: 1em;
+        margin: 1em;
+        background-color: rgb(236, 244, 255);
+    }
+
+    input {
+        border-radius: 5px;
+    }
+
+    .input_text_chapter {
+        width: 30em;
+        border-radius: 5px;
+    }
+
+    .input_text {
+        width: 40%;
+    }
+
+    textarea {
+        width: 100%;
+    }
+
+    #div_chapters_titles_container {
+        visibility: hidden;
+    }
+
+    button {
+        border-radius: 5px;
+        background-color: rgb(159, 220, 255);
+        cursor: pointer;
+    }
+
+    .generate_subjects_titles {}
+
+    .div_inner {
+        width: 95%;
+        margin-right: 5%;
+        font-size: .95em;
+    }
+</style>
+<script>
+    const div_ids = [];  // none repeative ids
+    function makeid() {
+        let length = 6
+        let result = '';
+        let counter = 0;
+        while (counter < length || div_ids.includes(result)) {
+            result = '';
+            counter = 0;
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+            const charactersLength = characters.length;
+            while (counter < length) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                counter += 1;
+            }
+        }
+        div_ids.push(result);
+        return result;
+    }
+
+
+    function Generate_Content(divid) {
+        document.getElementById("button_create_subjects_" + divid).disabled = true;
+        document.getElementById("button_create_content_" + divid).disabled = true;
+        document.getElementById("div_inner_" + divid).innerHTML = '<img src="static/processing1.gif" style="width:50px"> جاري انشاء المحتوى. برجاء الأنتظار.'
+        let subject = document.getElementById("text_" + divid).value;
+        let target_age = document.getElementById("target_age").value;
+        var xhttp1 = new XMLHttpRequest();
+        xhttp1.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                // console.log(this.responseText);
+                if (this.responseText === "-1") {
+                } else {
+
+                    document.getElementById("div_inner_" + divid).innerHTML = ' <textarea class="input_textarea" id="textarea_' + divid + '" name="textarea_' + divid + '">' + this.responseText + '"</textarea>';
+                    document.getElementById("textarea_" + divid).style.height = document.getElementById("textarea_" + divid).scrollHeight + "px";
+                    document.getElementById("button_create_subjects_" + divid).disabled = false;
+                    document.getElementById("button_create_content_" + divid).disabled = false;
+                    document.getElementById("button_create_content_" + divid).innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
+
+                }
+            }
+        };
+
+        xhttp1.open("POST", "/generate_content?subject=" + subject + "&target_age=" + target_age);
+        xhttp1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp1.send();
+    }
+
+    function Generate_Titles(div_id) {
+        document.getElementById("button_create_subjects_" + div_id).disabled = true;
+        document.getElementById("button_create_content_" + div_id).disabled = true;
+        document.getElementById("div_inner_" + div_id).innerHTML = '<img src="static/processing1.gif" style="width:50px"> جاري انشاء المحتوى. برجاء الأنتظار.'
+
+        let title = document.getElementById("text_" + div_id).value;
+        let target_age = document.getElementById("target_age").value;
+        var xhttp1 = new XMLHttpRequest();
+        xhttp1.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                console.log(this.responseText);
+                if (this.responseText === "-1") {
+                } else {
+                    let lines = this.responseText.split(/\r?\n/);
+                    div_chapters_titles = "";
+                    for (var i in lines) {
+                        titles = lines[i].split(".")[1]
+                        divid = makeid();
+                        div_chapters_titles = div_chapters_titles + (i) + "." + ' <input type="text" class="input_text" id="text_' + divid + '" name="text_' + divid + '" value="' + titles + '">';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_create_subjects_' + divid + '" class="generate_sub_titles" style="padding: 1em;" onclick="Generate_Titles(\'' + divid + '\')">انشىء موضوعات</button>';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_create_content_' + divid + '" class="generate_content" style="padding: 1em;" onclick="Generate_Content(\'' + divid + '\')">اكتب محتوى</button>';
+                        div_chapters_titles = div_chapters_titles + '<br>';
+                        // div_chapters_titles = div_chapters_titles + '<br>';
+                        div_chapters_titles = div_chapters_titles + '<div class="div_inner" id="div_inner_' + divid + '">  </div>';
+                        // div_chapters_titles = div_chapters_titles + '<br>';
+                    }
+                    document.getElementById("div_inner_" + div_id).innerHTML = "<div>يمكنك تغيير العنوان وإعادة المحاولة</div>" + div_chapters_titles;
+                    // document.getElementById("div_chapters_titles_container").style.visibility = "visible";
+                    document.getElementById("button_create_subjects_" + div_id).disabled = false;
+                    document.getElementById("button_create_content_" + div_id).disabled = false;
+                    document.getElementById("button_create_subjects_" + div_id).innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
+                }
+            }
+        };
+        xhttp1.open("POST", "/generate_subjects_titles?chapter_title=" + chapter_title + "&target_age=" + target_age);
+        xhttp1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp1.send();
+    }
+
+    function Generate_Chapters_Names() {
+        document.getElementById("generate_chapters_names").disabled = true;
+        document.getElementById("div_chapters_titles_container").style.visibility = "visible";
+        document.getElementById("div_chapters_titles").innerHTML = '<img src="static/processing1.gif" style="width:50px"> جاري انشاء المحتوى. برجاء الأنتظار.'
+
+        let book_title = document.getElementById("book_title").value;
+        let target_age = document.getElementById("target_age").value;
+
+        var postdata = "book_title=" + book_title + "&" + "target_age=" + target_age;
+
+        var xhttp1 = new XMLHttpRequest();
+        xhttp1.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                // document.getElementById("blueFaultMessage").innerHTML = "";
+                // console.log(this.responseText);
+                if (this.responseText === "-1") {
+                    // document.getElementById("blueFaultMessage").innerHTML = "Invalid Input";
+                } else {
+                    let lines = this.responseText.split(/\r?\n/);
+                    div_chapters_titles = "";
+                    for (var i in lines) {
+                        divid = makeid();
+                        chapter_title = lines[i].split(".")[1]
+                        div_chapters_titles = div_chapters_titles + (i) + "." + ' <input type="text" class="input_text_chapter" id="text_' + divid + '" name="text_' + divid + '" value="' + chapter_title + '">';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_create_subjects_' + divid + '" class=\"generate_subjects_titles\" style=\"padding: 1em;\" onclick=\"Generate_Titles(\'' + divid + '\')\">انشىء موضوعات</button>';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_create_content_' + divid + '" class=\"generate_content\" style=\"padding: 1em;\" onclick=\"Generate_Content(\'' + divid + '\')\">اكتب محتوى</button>';
+                        div_chapters_titles = div_chapters_titles + '<br>';
+                        div_chapters_titles = div_chapters_titles + '<br>';
+                        div_chapters_titles = div_chapters_titles + '<div class=\"div_inner\" id=\"div_inner_' + divid + '">  </div>';
+                        div_chapters_titles = div_chapters_titles + '<br>';
+                    }
+                    document.getElementById("div_chapters_titles").innerHTML = div_chapters_titles;
+                    document.getElementById("div_chapters_titles_container").style.visibility = "visible";
+                    document.getElementById("generate_chapters_names").disabled = false;
+                    document.getElementById("generate_chapters_names").innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
+
+                }
+            }
+        };
+
+        xhttp1.open("POST", "/generate_chapters_names?" + postdata);
+        xhttp1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp1.send();
+    }
+
+</script>
+
+<body style="direction:rtl">
+
+    <div id="div_instructions">
+        <b>
+        اداة التأليف التلقائي للكتب الدراسية باستخدام chatpgt
+        </b>
+        <br>
+عزيزي المؤلف نامل منكم اتباع الارشادات للحصول على افضل نتائج.
+<br>
+ارشادات استخدام الكتاب
+<br>
+١- ادخل عنوان الكتاب الذي ترغب في تأليفه باللغة العربية وتحقق من غياب الاخطاء الاملائية
+<br>
+٢- حدد المستوى العمري : المستوى الجامعي، المستوى المتوسط، المستوى الابتدائي
+<br>
+٣- اضغط زر انشاء عناوين الفصول. 
+<br>
+٤- يمكنك التعديل اليدوي على عناوين الفصول، أو اضافة أو حذف فصل. 
+<br>
+٥- انشئ موضوعات فرعية لكل فصل بالضغط على زر انشئ موضوعات. انتظر عشرون ثانية بين كل عملية ولاحقتها. 
+<br>
+٦- لكتابة المحتوى، قم بالضغط على زر اكتب المحتوى امام كل موضوع فرعي. انتظر عشرون ثانية بين كل عملية ولاحقتها.
+    </div>
+    <div id="div_book_title" style="padding: 1em;">
+
+        <label for="book_title">
+            ادخل عنوان الكتاب:
+        </label>
+        <input type="text" id="book_title" name="book_title" value="الفيزياء الحيوية"><br><br>
+
+
+        <label for="target_age">
+            ما المستوى العمري للفئة المستهدفة؟
+        </label>
+        <select id="target_age" name="target_age" >
+            <option value="target_college" selected>المستوى الجامعي</option>
+            <option value="target_highschool">المستوى المتوسط</option>
+            <option value="target_primary">المستوى الابتدائي</option>            
+        </select>
+
+        <br><br>
+
+        <button class="" id="generate_chapters_names" style="padding: 1em;" onclick="Generate_Chapters_Names()">
+            انشىء عناوين الفصول
+        </button>
+    </div>
+
+    <div id="div_chapters_titles_container">
+        <h3>
+            عناوين الفصول المقترحة
+        </h3>
+        <div id="div_chapters_titles">
+
+        </div>
+
+    </div>
+
+</body>
