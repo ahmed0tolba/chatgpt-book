@@ -12,7 +12,8 @@
 <style>
     #div_book_title,
     #div_chapters_titles_container,
-    #div_instructions {
+    #div_instructions,
+    #div_cover {
         border: 1px solid black;
         border-radius: 5px;
         padding: 1em;
@@ -54,6 +55,11 @@
         margin-right: 5%;
         font-size: .95em;
     }
+
+    #img_cover{
+        border-radius: 5px;
+        max-width: 100%;
+    }
 </style>
 <script>
     const div_ids = [];  // none repeative ids
@@ -75,7 +81,30 @@
         return result;
     }
 
+    function Generate_Cover(divid) {
+        document.getElementById("img_cover").src = "static/processing1.gif";
+        document.getElementById("generate_cover").disabled = true;
+        let cover_description = document.getElementById("cover_description").value;
+        var postdata = "cover_description=" + cover_description ;
+        var xhttp1 = new XMLHttpRequest();
+        xhttp1.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                // console.log(this.responseText);
+                if (this.responseText === "-1") {
+                } else {
 
+                    document.getElementById("img_cover").src = this.responseText;
+                    document.getElementById("generate_cover").disabled = false;
+                    document.getElementById("generate_cover").innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
+
+                }
+            }
+        };
+
+        xhttp1.open("POST", "/generate_cover?" + postdata);
+        xhttp1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp1.send();
+    }
     function Generate_Content(divid) {
         document.getElementById("button_create_subjects_" + divid).disabled = true;
         document.getElementById("button_create_content_" + divid).disabled = true;
@@ -194,24 +223,24 @@
 
     <div id="div_instructions">
         <b>
-        اداة التأليف التلقائي للكتب الدراسية باستخدام chatpgt
+            اداة التأليف التلقائي للكتب الدراسية باستخدام chatpgt
         </b>
         <br>
-عزيزي المؤلف نامل منكم اتباع الارشادات للحصول على افضل نتائج.
-<br>
-ارشادات استخدام الكتاب
-<br>
-١- ادخل عنوان الكتاب الذي ترغب في تأليفه باللغة العربية وتحقق من غياب الاخطاء الاملائية
-<br>
-٢- حدد المستوى العمري : المستوى الجامعي، المستوى المتوسط، المستوى الابتدائي
-<br>
-٣- اضغط زر انشاء عناوين الفصول. 
-<br>
-٤- يمكنك التعديل اليدوي على عناوين الفصول، أو اضافة أو حذف فصل. 
-<br>
-٥- انشئ موضوعات فرعية لكل فصل بالضغط على زر انشئ موضوعات. انتظر عشرون ثانية بين كل عملية ولاحقتها. 
-<br>
-٦- لكتابة المحتوى، قم بالضغط على زر اكتب المحتوى امام كل موضوع فرعي. انتظر عشرون ثانية بين كل عملية ولاحقتها.
+        عزيزي المؤلف نامل منكم اتباع الارشادات للحصول على افضل نتائج.
+        <br>
+        ارشادات استخدام الكتاب
+        <br>
+        ١- ادخل عنوان الكتاب الذي ترغب في تأليفه باللغة العربية وتحقق من غياب الاخطاء الاملائية
+        <br>
+        ٢- حدد المستوى العمري : المستوى الجامعي، المستوى المتوسط، المستوى الابتدائي
+        <br>
+        ٣- اضغط زر انشاء عناوين الفصول.
+        <br>
+        ٤- يمكنك التعديل اليدوي على عناوين الفصول، أو اضافة أو حذف فصل.
+        <br>
+        ٥- انشئ موضوعات فرعية لكل فصل بالضغط على زر انشئ موضوعات. انتظر عشرون ثانية بين كل عملية ولاحقتها.
+        <br>
+        ٦- لكتابة المحتوى، قم بالضغط على زر اكتب المحتوى امام كل موضوع فرعي. انتظر عشرون ثانية بين كل عملية ولاحقتها.
     </div>
     <div id="div_book_title" style="padding: 1em;">
 
@@ -224,10 +253,10 @@
         <label for="target_age">
             ما المستوى العمري للفئة المستهدفة؟
         </label>
-        <select id="target_age" name="target_age" >
+        <select id="target_age" name="target_age">
             <option value="target_college" selected>المستوى الجامعي</option>
             <option value="target_highschool">المستوى المتوسط</option>
-            <option value="target_primary">المستوى الابتدائي</option>            
+            <option value="target_primary">المستوى الابتدائي</option>
         </select>
 
         <br><br>
@@ -245,6 +274,21 @@
 
         </div>
 
+    </div>
+
+    <div id="div_cover">
+        <label for="cover_description">
+            ادخل وصف الغلاف:
+        </label>
+        <input type="text" id="cover_description" name="cover_description" value=" حركة هيكل عظمي "><br><br>
+        
+        <button class="" id="generate_cover" style="padding: 1em;" onclick="Generate_Cover()">
+            انشىء غلاف
+        </button>
+        <br><br>
+        
+        <img id="img_cover" src="">
+        
     </div>
 
 </body>

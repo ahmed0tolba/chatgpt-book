@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
 from flask import Flask, make_response, url_for, redirect, request, render_template, current_app, g, send_file
-
+import requests
+from werkzeug.utils import secure_filename
 import os
 import openai
+from datetime import datetime
 
 application = Flask(__name__)
 
@@ -18,6 +20,33 @@ def index():
 # openai.organization = ""
 # OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+@application.route('/generate_cover', methods=['POST'])
+def generate_cover():
+    cover_description = request.args.get('cover_description')
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt="Translate this into 1. English \n\n " + cover_description + "\n\n1.",
+        temperature=0.3,
+        max_tokens=100,
+        top_p=1.0,
+        frequency_penalty=0.0,
+        presence_penalty=0.0
+    )
+    cover_description_english = response['choices'][0]['text']
+    response = openai.Image.create(
+        prompt = cover_description_english,
+        n=1,
+        size="512x512"
+    )
+    # print(response)
+    image_url = response['data'][0]['url']
+    response = requests.get(image_url)
+    savename = secure_filename(str(datetime.now()) + ".jpg")
+    with open("images/" + savename, "wb") as f:
+        f.write(response.content)
+    return image_url
 
 
 @application.route('/generate_content', methods=['POST'])
@@ -75,11 +104,11 @@ def generate_subjects_titles():
         target_age_text = " لطلاب الثانوية "
     if target_age == "target_primary":
         target_age_text = " لطلاب الأبتدائية "
-    completion = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
-      messages=[{"role":"user", # user , assistant (chat) , system
-      "content":" ما هي عنواين الموضوعات المناسبة في كتيب عن " + chapter_title + target_age_text + " ? "
-      }]
-    )
+    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+                                              messages=[{"role": "user",  # user , assistant (chat) , system
+                                                         "content": " ما هي عنواين الموضوعات المناسبة في كتيب عن " + chapter_title + target_age_text + " ? "
+                                                         }]
+                                              )
     print(completion)
 
     # completion = {
@@ -120,11 +149,11 @@ def generate_chapters_names():
         target_age_text = " لطلاب الثانوية "
     if target_age == "target_primary":
         target_age_text = " لطلاب الأبتدائية "
-    completion = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
-        messages=[{"role":"user", # user , assistant (chat) , system
-        "content":" ما هي عنواين الفصول المناسبة لكتاب بعنوان " + book_title + target_age_text + " ? "
-        }]
-    )
+    completion = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+                                              messages=[{"role": "user",  # user , assistant (chat) , system
+                                                         "content": " ما هي عنواين الفصول المناسبة لكتاب بعنوان " + book_title + target_age_text + " ? "
+                                                         }]
+                                              )
 
     # completion = {"choices": [
     #     {
@@ -148,7 +177,7 @@ def generate_chapters_names():
     # }
     print(type(completion))
     print(completion)
-    print("choices[0]" ,completion["choices"][0]["message"]["content"])
+    print("choices[0]", completion["choices"][0]["message"]["content"])
     return str(completion["choices"][0]["message"]["content"])
 
 
