@@ -56,7 +56,7 @@
         font-size: .95em;
     }
 
-    #img_cover{
+    #img_cover {
         border-radius: 5px;
         max-width: 100%;
     }
@@ -81,11 +81,53 @@
         return result;
     }
 
+    function Download() {
+        items = document.getElementsByClassName("save");
+        content = "";
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].style.display != "none") {
+                console.log(items[i].style.display)
+                content += items[i].value + "\n\n\n";
+            }
+        }
+        const link = document.createElement("a");
+        const file = new Blob([content], { type: 'text/plain' });
+        link.href = URL.createObjectURL(file);
+        link.download = "sample.txt";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function Add_Item(div_id) {
+        var list = document.getElementById(div_id);
+        var entry = document.createElement('li');
+        divid = makeid();
+        content = '' 
+        content = content + ' <input type="text" class="input_text_chapter save" id="text_' + divid + '" name="text_' + divid + '" value="' + "" + '"> ';
+        content = content + ' <button id="button_create_subjects_' + divid + '" class=\"generate_subjects_titles\" style=\"padding: 1em;\" onclick=\"Generate_Titles(\'' + divid + '\')\">انشىء موضوعات</button>';
+        content = content + ' <button id="button_create_content_' + divid + '" class=\"generate_content\" style=\"padding: 1em;\" onclick=\"Generate_Content(\'' + divid + '\')\">اكتب محتوى</button>';
+        content = content + ' <button id="button_delete_item_' + divid + '" class=\"delete_item\" style=\"padding: 1em;\" onclick=\"Delete_Item(\'' + divid + '\')\">حذف العنصر</button>';
+        content = content + ' <button id="button_add_item_' + divid + '" class=\"add_item\" style=\"padding: 1em;\" onclick=\"Add_Item(\''+ div_id +'\')\">اضف العنصر</button>';
+        content = content + '<br>';
+        content = content + '<br>';
+        content = content + '<div class=\"div_inner\" id=\"div_inner_' + divid + '">  </div>';
+        content = content + '<br>';
+        entry.setAttribute("id", "li_" + divid );
+        entry.innerHTML = content
+        list.appendChild(entry);
+    }
+
+    function Delete_Item(divid) {
+        document.getElementById("text_" + divid).style.display = "none"
+        document.getElementById("li_" + divid).style.display = "none"
+    }
+
     function Generate_Cover(divid) {
         document.getElementById("img_cover").src = "static/processing1.gif";
         document.getElementById("generate_cover").disabled = true;
+        document.getElementById("generate_cover").innerText = "برجاء الأنتظار"
         let cover_description = document.getElementById("cover_description").value;
-        var postdata = "cover_description=" + cover_description ;
+        var postdata = "cover_description=" + cover_description;
         var xhttp1 = new XMLHttpRequest();
         xhttp1.onreadystatechange = function () {
             if (this.readyState == 4) {
@@ -105,9 +147,11 @@
         xhttp1.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp1.send();
     }
+
     function Generate_Content(divid) {
         document.getElementById("button_create_subjects_" + divid).disabled = true;
         document.getElementById("button_create_content_" + divid).disabled = true;
+        document.getElementById("button_create_content_" + divid).innerText = "برجاء الأنتظار"
         document.getElementById("div_inner_" + divid).innerHTML = '<img src="static/processing1.gif" style="width:50px"> جاري انشاء المحتوى. برجاء الأنتظار.'
         let subject = document.getElementById("text_" + divid).value;
         let target_age = document.getElementById("target_age").value;
@@ -118,8 +162,8 @@
                 if (this.responseText === "-1") {
                 } else {
 
-                    document.getElementById("div_inner_" + divid).innerHTML = ' <textarea class="input_textarea" id="textarea_' + divid + '" name="textarea_' + divid + '">' + this.responseText + '"</textarea>';
-                    document.getElementById("textarea_" + divid).style.height = document.getElementById("textarea_" + divid).scrollHeight + "px";
+                    document.getElementById("div_inner_" + divid).innerHTML = ' <textarea class="input_textarea save" id="text_' + divid + '" name="textarea_' + divid + '">' + this.responseText + '"</textarea>';
+                    document.getElementById("text_" + divid).style.height = document.getElementById("text_" + divid).scrollHeight + "px";
                     document.getElementById("button_create_subjects_" + divid).disabled = false;
                     document.getElementById("button_create_content_" + divid).disabled = false;
                     document.getElementById("button_create_content_" + divid).innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
@@ -136,6 +180,7 @@
     function Generate_Titles(div_id) {
         document.getElementById("button_create_subjects_" + div_id).disabled = true;
         document.getElementById("button_create_content_" + div_id).disabled = true;
+        document.getElementById("button_create_subjects_" + div_id).innerText = "برجاء الأنتظار"
         document.getElementById("div_inner_" + div_id).innerHTML = '<img src="static/processing1.gif" style="width:50px"> جاري انشاء المحتوى. برجاء الأنتظار.'
 
         let title = document.getElementById("text_" + div_id).value;
@@ -143,7 +188,7 @@
         var xhttp1 = new XMLHttpRequest();
         xhttp1.onreadystatechange = function () {
             if (this.readyState == 4) {
-                console.log(this.responseText);
+                // console.log(this.responseText);
                 if (this.responseText === "-1") {
                 } else {
                     let lines = this.responseText.split(/\r?\n/);
@@ -151,15 +196,16 @@
                     for (var i in lines) {
                         titles = lines[i].split(".")[1]
                         divid = makeid();
-                        div_chapters_titles = div_chapters_titles + (i) + "." + ' <input type="text" class="input_text" id="text_' + divid + '" name="text_' + divid + '" value="' + titles + '">';
+                        div_chapters_titles = div_chapters_titles + '<li id="li_' + divid + '"> <input type="text" class="input_text save" id="text_' + divid + '" name="text_' + divid + '" value="' + titles + '">';
                         div_chapters_titles = div_chapters_titles + ' <button id="button_create_subjects_' + divid + '" class="generate_sub_titles" style="padding: 1em;" onclick="Generate_Titles(\'' + divid + '\')">انشىء موضوعات</button>';
                         div_chapters_titles = div_chapters_titles + ' <button id="button_create_content_' + divid + '" class="generate_content" style="padding: 1em;" onclick="Generate_Content(\'' + divid + '\')">اكتب محتوى</button>';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_delete_item_' + divid + '" class="delete_item" style="padding: 1em;" onclick="Delete_Item(\'' + divid + '\')">حذف العنصر</button>';
                         div_chapters_titles = div_chapters_titles + '<br>';
                         // div_chapters_titles = div_chapters_titles + '<br>';
-                        div_chapters_titles = div_chapters_titles + '<div class="div_inner" id="div_inner_' + divid + '">  </div>';
+                        div_chapters_titles = div_chapters_titles + '<div class="div_inner" id="div_inner_' + divid + '">  </div></li>';
                         // div_chapters_titles = div_chapters_titles + '<br>';
                     }
-                    document.getElementById("div_inner_" + div_id).innerHTML = "<div>يمكنك تغيير العنوان وإعادة المحاولة</div>" + div_chapters_titles;
+                    document.getElementById("div_inner_" + div_id).innerHTML = "<ol>" + "<div>يمكنك تغيير العنوان وإعادة المحاولة</div>" + div_chapters_titles + "</ol>";
                     // document.getElementById("div_chapters_titles_container").style.visibility = "visible";
                     document.getElementById("button_create_subjects_" + div_id).disabled = false;
                     document.getElementById("button_create_content_" + div_id).disabled = false;
@@ -195,15 +241,18 @@
                     for (var i in lines) {
                         divid = makeid();
                         chapter_title = lines[i].split(".")[1]
-                        div_chapters_titles = div_chapters_titles + (i) + "." + ' <input type="text" class="input_text_chapter" id="text_' + divid + '" name="text_' + divid + '" value="' + chapter_title + '">';
+                        div_chapters_titles = div_chapters_titles + '<li id="li_' + divid + '"> <input type="text" class="input_text_chapter save" id="text_' + divid + '" name="text_' + divid + '" value="' + chapter_title + '"> ';
                         div_chapters_titles = div_chapters_titles + ' <button id="button_create_subjects_' + divid + '" class=\"generate_subjects_titles\" style=\"padding: 1em;\" onclick=\"Generate_Titles(\'' + divid + '\')\">انشىء موضوعات</button>';
                         div_chapters_titles = div_chapters_titles + ' <button id="button_create_content_' + divid + '" class=\"generate_content\" style=\"padding: 1em;\" onclick=\"Generate_Content(\'' + divid + '\')\">اكتب محتوى</button>';
+                        div_chapters_titles = div_chapters_titles + ' <button id="button_delete_item_' + divid + '" class=\"delete_item\" style=\"padding: 1em;\" onclick=\"Delete_Item(\'' + divid + '\')\">حذف العنصر</button>';
+                        if (i==lines.length-1)
+                            div_chapters_titles = div_chapters_titles + ' <button id="button_add_item_' + divid + '" class=\"add_item\" style=\"padding: 1em;\" onclick=\"Add_Item(\'ol_chapters_titles\')\">اضف العنصر</button>';
                         div_chapters_titles = div_chapters_titles + '<br>';
                         div_chapters_titles = div_chapters_titles + '<br>';
                         div_chapters_titles = div_chapters_titles + '<div class=\"div_inner\" id=\"div_inner_' + divid + '">  </div>';
-                        div_chapters_titles = div_chapters_titles + '<br>';
+                        div_chapters_titles = div_chapters_titles + '<br></li>';
                     }
-                    document.getElementById("div_chapters_titles").innerHTML = div_chapters_titles;
+                    document.getElementById("div_chapters_titles").innerHTML = "<ol id='ol_chapters_titles'>" + div_chapters_titles + "</ol>";
                     document.getElementById("div_chapters_titles_container").style.visibility = "visible";
                     document.getElementById("generate_chapters_names").disabled = false;
                     document.getElementById("generate_chapters_names").innerText = "يمكنك تغيير العنوان وإعادة المحاولة"
@@ -221,11 +270,11 @@
 
 <body style="direction:rtl">
 
-    <div id="div_instructions">
-        <b>
+    <h2><b>
             اداة التأليف التلقائي للكتب الدراسية باستخدام chatpgt
-        </b>
-        <br>
+        </b></h2>
+    <div id="div_instructions">
+
         عزيزي المؤلف نامل منكم اتباع الارشادات للحصول على افضل نتائج.
         <br>
         ارشادات استخدام الكتاب
@@ -281,14 +330,22 @@
             ادخل وصف الغلاف:
         </label>
         <input type="text" id="cover_description" name="cover_description" value=" حركة هيكل عظمي "><br><br>
-        
+
         <button class="" id="generate_cover" style="padding: 1em;" onclick="Generate_Cover()">
             انشىء غلاف
         </button>
         <br><br>
-        
+
         <img id="img_cover" src="">
-        
+
+    </div>
+
+    <div id="div_download">
+
+        <button class="" id="download" style="padding: 1em;" onclick="Download()">
+            تنزيل ملف المشروع
+        </button>
+
     </div>
 
 </body>
